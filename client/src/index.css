@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color-scheme: light;
+  color: #374151;
+  background-color: #faf8ff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f0ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d7cdff;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #bba6ff;
+}
+
+/* Form input styling */
+input,
+select,
+textarea {
+  @apply rounded-xl border-2 border-lavender-200 px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-lavender-400 focus:border-transparent transition-all duration-200 bg-white;
+}
+
+input::placeholder,
+textarea::placeholder {
+  @apply text-gray-400;
+}
+
+/* Button base styles */
+.btn {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-lavender-500 to-lavender-600 text-white hover:from-lavender-600 hover:to-lavender-700 focus:ring-lavender-400 shadow-lg shadow-lavender-300/50;
+}
+
+.btn-secondary {
+  @apply bg-white text-lavender-700 border-2 border-lavender-200 hover:bg-lavender-50 hover:border-lavender-300 focus:ring-lavender-400;
+}
+
+.btn-mint {
+  @apply bg-gradient-to-r from-mint-500 to-mint-600 text-white hover:from-mint-600 hover:to-mint-700 focus:ring-mint-400 shadow-lg shadow-mint-300/50;
+}
+
+/* Card styling */
+.card {
+  @apply bg-white rounded-2xl p-6 shadow-lg shadow-lavender-100/50 border border-lavender-100;
+}
+
+/* Gradient background */
+.gradient-bg {
+  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ffeaef 100%);
+}
+
+/* Animation utilities */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
