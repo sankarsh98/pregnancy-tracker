@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { pregnancyApi } from '../api/client';
@@ -26,10 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [pregnancy, setPregnancy] = useState<PregnancyData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const loadingCompleteRef = useRef(false);
 
     const fetchPregnancy = async (): Promise<PregnancyData | null> => {
         try {
+            console.log('Fetching pregnancy data...');
             const result = await pregnancyApi.get();
+            console.log('Pregnancy fetch result:', result);
             return result.data || null;
         } catch (err) {
             console.error('Error fetching pregnancy:', err);
@@ -42,100 +45,112 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPregnancy(data);
     }, []);
 
+    const completeLoading = useCallback(() => {
+        if (!loadingCompleteRef.current) {
+            loadingCompleteRef.current = true;
+            setIsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         let isMounted = true;
-        let hasInitialized = false;
 
         const initializeAuth = async () => {
-            if (hasInitialized) return;
-            hasInitialized = true;
-
             try {
+                console.log('Initializing auth...');
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
                     console.error('Session error:', error);
-                    if (isMounted) setIsLoading(false);
+                    if (isMounted) completeLoading();
                     return;
                 }
 
+                console.log('Session:', session ? 'exists' : 'none');
+
                 if (session?.user && isMounted) {
                     setUser({ id: session.user.id, email: session.user.email || '' });
-                    const pregnancyData = await fetchPregnancy();
-                    if (isMounted) setPregnancy(pregnancyData);
+
+                    // Fetch pregnancy with a timeout
+                    const pregnancyPromise = fetchPregnancy();
+                    const timeoutPromise = new Promise<null>((resolve) => {
+                        setTimeout(() => resolve(null), 10000); // 10 second timeout for pregnancy fetch
+                    });
+
+                    const pregnancyData = await Promise.race([pregnancyPromise, timeoutPromise]);
+
+                    if (isMounted) {
+                        setPregnancy(pregnancyData);
+                        completeLoading();
+                    }
+                } else if (isMounted) {
+                    // No session, complete loading immediately
+                    completeLoading();
                 }
             } catch (err) {
                 console.error('Auth init error:', err);
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
+                if (isMounted) completeLoading();
             }
         };
 
-        // Start initialization
         initializeAuth();
-
-        // Failsafe: ensure loading stops after 5 seconds max
-        const timeout = setTimeout(() => {
-            if (isMounted && isLoading) {
-                console.warn('Auth loading timeout - forcing complete');
-                setIsLoading(false);
-            }
-        }, 5000);
 
         // Subscribe to auth changes for login/logout during the session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state changed:', event);
 
-                // Only handle actual sign-in/sign-out events, not initial session
                 if (event === 'SIGNED_IN' && session?.user && isMounted) {
                     setUser({ id: session.user.id, email: session.user.email || '' });
                     const pregnancyData = await fetchPregnancy();
-                    if (isMounted) setPregnancy(pregnancyData);
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setPregnancy(pregnancyData);
+                        completeLoading();
+                    }
                 } else if (event === 'SIGNED_OUT' && isMounted) {
                     setUser(null);
                     setPregnancy(null);
-                    setIsLoading(false);
+                    completeLoading();
                 }
             }
         );
 
         return () => {
             isMounted = false;
-            clearTimeout(timeout);
             subscription.unsubscribe();
         };
-    }, []);
+    }, [completeLoading]);
 
     const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            loadingCompleteRef.current = false;
             setIsLoading(true);
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
-                setIsLoading(false);
+                completeLoading();
                 return { success: false, error: error.message };
             }
+            // Don't complete loading here - let onAuthStateChange handle it
             return { success: true };
         } catch (err: any) {
-            setIsLoading(false);
+            completeLoading();
             return { success: false, error: err?.message || 'Login failed' };
         }
     };
 
     const signup = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            loadingCompleteRef.current = false;
             setIsLoading(true);
             const { error } = await supabase.auth.signUp({ email, password });
             if (error) {
-                setIsLoading(false);
+                completeLoading();
                 return { success: false, error: error.message };
             }
+            // Don't complete loading here - let onAuthStateChange handle it
             return { success: true };
         } catch (err: any) {
-            setIsLoading(false);
+            completeLoading();
             return { success: false, error: err?.message || 'Signup failed' };
         }
     };
