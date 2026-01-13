@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { pregnancyApi } from '../api/client';
@@ -25,85 +25,85 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [pregnancy, setPregnancy] = useState<PregnancyData | null>(null);
-    const [isAuthLoading, setIsAuthLoading] = useState(true);
-    const [isPregnancyLoading, setIsPregnancyLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const initialLoadDone = useRef(false);
 
-    // Combined loading state - we're loading until both auth AND pregnancy check are done
-    const isLoading = isAuthLoading || (user !== null && isPregnancyLoading);
-
-    const refreshPregnancy = useCallback(async () => {
+    const fetchPregnancy = async (): Promise<PregnancyData | null> => {
         try {
-            setIsPregnancyLoading(true);
             const result = await pregnancyApi.get();
-            if (result.data) {
-                setPregnancy(result.data);
-            } else {
-                setPregnancy(null);
-            }
+            return result.data || null;
         } catch (err) {
             console.error('Error fetching pregnancy:', err);
-            setPregnancy(null);
-        } finally {
-            setIsPregnancyLoading(false);
+            return null;
         }
+    };
+
+    const refreshPregnancy = useCallback(async () => {
+        const data = await fetchPregnancy();
+        setPregnancy(data);
     }, []);
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-            if (error) {
-                console.error('Session error:', error);
-                setIsAuthLoading(false);
-                setIsPregnancyLoading(false);
-                return;
-            }
+        let isMounted = true;
 
-            if (session?.user) {
-                setUser({ id: session.user.id, email: session.user.email || '' });
-                // Fetch pregnancy data and wait for it
-                try {
-                    const result = await pregnancyApi.get();
-                    if (result.data) setPregnancy(result.data);
-                } catch (err) {
-                    console.error('Error fetching pregnancy:', err);
+        const initializeAuth = async () => {
+            try {
+                // Get the current session
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    console.error('Session error:', error);
+                    if (isMounted) setIsLoading(false);
+                    return;
                 }
-                setIsPregnancyLoading(false);
-            } else {
-                setIsPregnancyLoading(false);
-            }
-            setIsAuthLoading(false);
-        }).catch(err => {
-            console.error('GetSession error:', err);
-            setIsAuthLoading(false);
-            setIsPregnancyLoading(false);
-        });
 
-        // Subscribe to auth changes
+                if (session?.user && isMounted) {
+                    setUser({ id: session.user.id, email: session.user.email || '' });
+                    const pregnancyData = await fetchPregnancy();
+                    if (isMounted) setPregnancy(pregnancyData);
+                }
+            } catch (err) {
+                console.error('Auth init error:', err);
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                    initialLoadDone.current = true;
+                }
+            }
+        };
+
+        initializeAuth();
+
+        // Subscribe to auth changes (but skip initial event if we already loaded)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state changed:', event);
 
-                if (session?.user) {
+                // Skip INITIAL_SESSION since we already handled it above
+                if (event === 'INITIAL_SESSION') {
+                    return;
+                }
+
+                if (session?.user && isMounted) {
                     setUser({ id: session.user.id, email: session.user.email || '' });
-                    setIsPregnancyLoading(true);
-                    try {
-                        const result = await pregnancyApi.get();
-                        if (result.data) setPregnancy(result.data);
-                        else setPregnancy(null);
-                    } catch (err) {
-                        console.error('Error fetching pregnancy:', err);
-                        setPregnancy(null);
+                    // Only fetch pregnancy if this is a new sign-in
+                    if (event === 'SIGNED_IN') {
+                        setIsLoading(true);
+                        const pregnancyData = await fetchPregnancy();
+                        if (isMounted) {
+                            setPregnancy(pregnancyData);
+                            setIsLoading(false);
+                        }
                     }
-                    setIsPregnancyLoading(false);
-                } else {
+                } else if (isMounted) {
                     setUser(null);
                     setPregnancy(null);
-                    setIsPregnancyLoading(false);
                 }
             }
         );
 
         return () => {
+            isMounted = false;
             subscription.unsubscribe();
         };
     }, []);
