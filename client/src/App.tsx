@@ -21,21 +21,6 @@ function LoadingScreen() {
   );
 }
 
-// Protected route wrapper - requires authentication
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-}
-
 // Route that requires both auth AND an active pregnancy
 function RequiresPregnancyRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, pregnancy } = useAuth();
