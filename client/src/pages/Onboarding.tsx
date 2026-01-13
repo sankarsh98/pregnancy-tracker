@@ -26,16 +26,22 @@ export default function Onboarding() {
         setError('');
         setIsLoading(true);
 
-        const result = await pregnancyApi.create(lmpDate, useDueDate ? dueDate : undefined);
+        try {
+            const result = await pregnancyApi.create(lmpDate, useDueDate ? dueDate : undefined);
 
-        if (result.error) {
-            setError(result.error);
+            if (result.error) {
+                setError(result.error);
+                setIsLoading(false);
+                return;
+            }
+
+            await refreshPregnancy();
+            navigate('/dashboard');
+        } catch (err: any) {
+            console.error('Onboarding error:', err);
+            setError(err?.message || 'Failed to create pregnancy. Please try again.');
             setIsLoading(false);
-            return;
         }
-
-        await refreshPregnancy();
-        navigate('/dashboard');
     };
 
     return (

@@ -1,7 +1,7 @@
 /**
  * Calculate the pregnancy week and day from LMP date
  */
-export function calculatePregnancyWeek(lmpDate: Date, dueDate?: Date): { week: number; day: number; totalDays: number } {
+export function calculatePregnancyWeek(lmpDate: Date | string, dueDate?: Date | string): { week: number; day: number; totalDays: number } {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -33,7 +33,7 @@ export function calculatePregnancyWeek(lmpDate: Date, dueDate?: Date): { week: n
 /**
  * Calculate due date from LMP (LMP + 280 days = 40 weeks)
  */
-export function calculateDueDate(lmpDate: Date): Date {
+export function calculateDueDate(lmpDate: Date | string): Date {
     const dueDate = new Date(lmpDate);
     dueDate.setDate(dueDate.getDate() + 280);
     return dueDate;
@@ -42,7 +42,7 @@ export function calculateDueDate(lmpDate: Date): Date {
 /**
  * Calculate days remaining until due date
  */
-export function calculateDaysRemaining(dueDate: Date): number {
+export function calculateDaysRemaining(dueDate: Date | string): number {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

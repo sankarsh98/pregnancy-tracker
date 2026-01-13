@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import EditPregnancyModal from '../components/EditPregnancyModal';
 import { educationApi } from '../api/client';
 import type { WeekContent } from '../api/client';
 
@@ -9,6 +10,7 @@ export default function Dashboard() {
     const { pregnancy, isLoading } = useAuth();
     const navigate = useNavigate();
     const [weekContent, setWeekContent] = useState<WeekContent | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         if (!isLoading && !pregnancy) {
@@ -111,7 +113,7 @@ export default function Dashboard() {
                         <span className="text-gray-700 font-medium">Appointments</span>
                     </button>
                     <button
-                        onClick={() => navigate('/education')}
+                        onClick={() => navigate('/education', { state: { week: pregnancy.week } })}
                         className="card hover:shadow-xl transition-shadow text-center py-6"
                     >
                         <span className="text-3xl mb-2 block">📚</span>
@@ -166,22 +168,38 @@ export default function Dashboard() {
 
                 {/* Due Date Card */}
                 <div className="card bg-gradient-to-r from-blush-50 to-cream-50 border-blush-100">
-                    <div className="flex items-center gap-4">
-                        <span className="text-4xl">🎀</span>
-                        <div>
-                            <h3 className="font-semibold text-gray-800">Estimated Due Date</h3>
-                            <p className="text-2xl font-bold text-blush-600">
-                                {new Date(pregnancy.dueDate).toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })}
-                            </p>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <span className="text-4xl">🎀</span>
+                            <div>
+                                <h3 className="font-semibold text-gray-800">Estimated Due Date</h3>
+                                <p className="text-2xl font-bold text-blush-600">
+                                    {new Date(pregnancy.dueDate).toLocaleDateString('en-US', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </p>
+                            </div>
                         </div>
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="bg-white/80 hover:bg-white text-gray-600 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                        >
+                            Edit
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <EditPregnancyModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSuccess={() => setIsEditModalOpen(false)}
+                pregnancyId={pregnancy.id}
+                currentDueDate={pregnancy.dueDate}
+            />
         </Layout>
     );
 }

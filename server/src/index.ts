@@ -1,4 +1,5 @@
 import express from 'express';
+// Force reload
 import cors from 'cors';
 import { initDatabase } from './config/database';
 

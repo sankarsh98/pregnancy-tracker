@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { educationApi } from '../api/client';
 import type { EducationData, WeekContent } from '../api/client';
@@ -6,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Education() {
     const { pregnancy } = useAuth();
+    const location = useLocation();
     const [educationData, setEducationData] = useState<EducationData | null>(null);
     const [selectedWeek, setSelectedWeek] = useState<WeekContent | null>(null);
     const [activeTab, setActiveTab] = useState<'week' | 'overview'>('week');
@@ -15,16 +17,25 @@ export default function Education() {
         educationApi.getAll().then(({ data }) => {
             if (data) {
                 setEducationData(data);
-                // Select current week by default
-                if (pregnancy?.week) {
-                    const weekContent = data.weeks.find(w => w.week === pregnancy.week)
-                        || data.weeks.find(w => w.week <= pregnancy.week);
+
+                // Logic to set selected week:
+                // 1. If state was passed via navigation (e.g. from Dashboard "This Week"), use that.
+                // 2. Otherwise default to current pregnancy week.
+                const stateWeek = location.state?.week;
+                const targetWeek = stateWeek || pregnancy?.week;
+
+                if (targetWeek) {
+                    // Find exact match or closest previous week
+                    // Sort descending to find the highest week number <= targetWeek
+                    const sortedWeeks = [...data.weeks].sort((a, b) => b.week - a.week);
+                    const weekContent = sortedWeeks.find(w => w.week <= targetWeek);
+
                     if (weekContent) setSelectedWeek(weekContent);
                 }
             }
             setIsLoading(false);
         });
-    }, [pregnancy?.week]);
+    }, [pregnancy?.week, location.state]);
 
     if (isLoading) {
         return (

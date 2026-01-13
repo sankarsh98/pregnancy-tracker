@@ -98,7 +98,7 @@ router.get('/pdf', authMiddleware, (req: AuthRequest, res: Response) => {
 
     const lmpDate = new Date(pregnancy.lmp_date);
     const dueDate = new Date(pregnancy.due_date);
-    const { week, day } = calculatePregnancyWeek(lmpDate);
+    const { week, day } = calculatePregnancyWeek(lmpDate, dueDate);
     const trimester = getTrimester(week);
     const daysRemaining = calculateDaysRemaining(dueDate);
 

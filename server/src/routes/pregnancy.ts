@@ -29,7 +29,7 @@ router.get('/', authMiddleware, (req: AuthRequest, res: Response) => {
 
     const lmpDate = new Date(pregnancy.lmp_date);
     const dueDate = new Date(pregnancy.due_date);
-    const { week, day, totalDays } = calculatePregnancyWeek(lmpDate);
+    const { week, day, totalDays } = calculatePregnancyWeek(lmpDate, dueDate);
     const daysRemaining = calculateDaysRemaining(dueDate);
     const trimester = getTrimester(week);
 

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -69,8 +69,8 @@ export default function Layout({ children }: LayoutProps) {
                             key={item.path}
                             to={item.path}
                             className={`flex flex-col items-center px-3 py-2 text-xs ${location.pathname === item.path
-                                    ? 'text-lavender-600'
-                                    : 'text-gray-500'
+                                ? 'text-lavender-600'
+                                : 'text-gray-500'
                                 }`}
                         >
                             <span className="text-xl mb-1">{item.icon}</span>
@@ -89,8 +89,8 @@ export default function Layout({ children }: LayoutProps) {
                                 key={item.path}
                                 to={item.path}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${location.pathname === item.path
-                                        ? 'bg-lavender-100 text-lavender-700 font-medium'
-                                        : 'text-gray-600 hover:bg-lavender-50 hover:text-lavender-600'
+                                    ? 'bg-lavender-100 text-lavender-700 font-medium'
+                                    : 'text-gray-600 hover:bg-lavender-50 hover:text-lavender-600'
                                     }`}
                             >
                                 <span className="text-xl">{item.icon}</span>

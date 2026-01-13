@@ -1,73 +1,14 @@
-const API_BASE = '/api';
+import { supabase } from '../lib/supabase';
+import {
+    calculatePregnancyWeek,
+    calculateDueDate,
+    calculateDaysRemaining,
+    getTrimester,
+    getTrimesterLabel
+} from '../utils/pregnancy';
+import educationData from '../data/education.json';
 
-interface ApiResponse<T> {
-    data?: T;
-    error?: string;
-}
-
-function getToken(): string | null {
-    return localStorage.getItem('token');
-}
-
-export function setToken(token: string): void {
-    localStorage.setItem('token', token);
-}
-
-export function removeToken(): void {
-    localStorage.removeItem('token');
-}
-
-async function request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-    const token = getToken();
-
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-    };
-
-    if (token) {
-        (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-            ...options,
-            headers,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            return { error: data.error || 'Request failed' };
-        }
-
-        return { data };
-    } catch (error) {
-        return { error: 'Network error' };
-    }
-}
-
-// Auth API
-export const authApi = {
-    signup: (email: string, password: string) =>
-        request<{ token: string; userId: string }>('/auth/signup', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        }),
-
-    login: (email: string, password: string) =>
-        request<{ token: string; userId: string }>('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        }),
-
-    me: () => request<{ id: string; email: string }>('/auth/me'),
-};
-
-// Pregnancy API
+// Types
 export interface PregnancyData {
     id: string;
     lmpDate: string;
@@ -81,23 +22,6 @@ export interface PregnancyData {
     createdAt: string;
 }
 
-export const pregnancyApi = {
-    get: () => request<PregnancyData>('/pregnancy'),
-
-    create: (lmpDate: string, dueDate?: string) =>
-        request<{ id: string; lmpDate: string; dueDate: string }>('/pregnancy', {
-            method: 'POST',
-            body: JSON.stringify({ lmpDate, dueDate }),
-        }),
-
-    update: (id: string, dueDate: string) =>
-        request<{ message: string }>(`/pregnancy/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ dueDate }),
-        }),
-};
-
-// Daily Logs API
 export interface DailyLog {
     id: string;
     pregnancy_id: string;
@@ -109,30 +33,8 @@ export interface DailyLog {
     blood_pressure: string | null;
     blood_sugar: number | null;
     created_at: string;
-    updated_at: string;
 }
 
-export const logsApi = {
-    getAll: () => request<DailyLog[]>('/logs'),
-
-    getByDate: (date: string) => request<DailyLog>(`/logs/${date}`),
-
-    create: (data: {
-        logDate: string;
-        symptoms?: string[];
-        mood?: string;
-        notes?: string;
-        weight?: number;
-        bloodPressure?: string;
-        bloodSugar?: number;
-    }) =>
-        request<{ id: string; message: string }>('/logs', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-};
-
-// Appointments API
 export interface Appointment {
     id: string;
     pregnancy_id: string;
@@ -143,33 +45,7 @@ export interface Appointment {
     created_at: string;
 }
 
-export const appointmentsApi = {
-    getAll: () => request<Appointment[]>('/appointments'),
-
-    create: (data: {
-        title: string;
-        datetime: string;
-        location?: string;
-        notes?: string;
-    }) =>
-        request<{ id: string; message: string }>('/appointments', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-
-    update: (id: string, data: Partial<Omit<Appointment, 'id' | 'pregnancy_id' | 'created_at'>>) =>
-        request<{ message: string }>(`/appointments/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-    delete: (id: string) =>
-        request<{ message: string }>(`/appointments/${id}`, {
-            method: 'DELETE',
-        }),
-};
-
-// Education API
+// Education Types
 export interface WeekContent {
     week: number;
     title: string;
@@ -194,45 +70,353 @@ export interface EducationData {
     trimesters: TrimesterContent[];
 }
 
-export const educationApi = {
-    getAll: () => request<EducationData>('/education'),
-
-    getWeek: (week: number) => request<WeekContent>(`/education/week/${week}`),
-
-    getTrimester: (trimester: number) =>
-        request<TrimesterContent & { weeks: WeekContent[] }>(`/education/trimester/${trimester}`),
-};
-
-// Export API
-export interface ExportData {
-    user: { email: string };
-    pregnancy: PregnancyData;
-    logs: DailyLog[];
-    appointments: Appointment[];
-    generatedAt: string;
-}
-
-export const exportApi = {
-    getPdfData: () => request<ExportData>('/export/pdf'),
-
-    downloadCsv: async () => {
-        const token = getToken();
-        const response = await fetch(`${API_BASE}/export/csv`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+// Auth API
+export const authApi = {
+    signup: async (email: string, password: string) => {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
         });
 
-        if (!response.ok) {
-            return { error: 'Failed to download CSV' };
+        if (error) return { error: error.message };
+        return { data: { token: data.session?.access_token, userId: data.user?.id } };
+    },
+
+    login: async (email: string, password: string) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) return { error: error.message };
+        return { data: { token: data.session?.access_token, userId: data.user?.id } };
+    },
+
+    me: async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) return { error: 'Not authenticated' };
+        return { data: { id: user.id, email: user.email || '' } };
+    },
+
+    logout: async () => {
+        await supabase.auth.signOut();
+    }
+};
+
+// Pregnancy API
+export const pregnancyApi = {
+    get: async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data, error } = await supabase
+            .from('pregnancies')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .limit(1);
+
+        if (error) return { error: error.message };
+        if (!data || data.length === 0) return { error: 'No active pregnancy found' };
+
+        const pregnancy = data[0];
+
+        // Calculate derived (computed) fields on client side
+        const lmpDate = new Date(pregnancy.lmp_date);
+        const dueDate = new Date(pregnancy.due_date);
+        const { week, day, totalDays } = calculatePregnancyWeek(lmpDate, dueDate);
+        const daysRemaining = calculateDaysRemaining(dueDate);
+        const trimester = getTrimester(week);
+
+        const pregnancyData: PregnancyData = {
+            id: pregnancy.id,
+            lmpDate: pregnancy.lmp_date,
+            dueDate: pregnancy.due_date,
+            week,
+            day,
+            totalDays,
+            daysRemaining,
+            trimester,
+            trimesterLabel: getTrimesterLabel(trimester),
+            createdAt: pregnancy.created_at
+        };
+
+        return { data: pregnancyData };
+    },
+
+    create: async (lmpDate: string, dueDate?: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        // Deactivate existing pregnancies
+        await supabase
+            .from('pregnancies')
+            .update({ is_active: false })
+            .eq('user_id', user.id);
+
+        const calculatedDueDate = dueDate || calculateDueDate(new Date(lmpDate)).toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+            .from('pregnancies')
+            .insert({
+                user_id: user.id,
+                lmp_date: lmpDate,
+                due_date: calculatedDueDate,
+                is_active: true
+            })
+            .select();
+
+        if (error) return { error: error.message };
+        if (!data || data.length === 0) return { error: 'Failed to create pregnancy' };
+        return { data: { id: data[0].id, lmpDate: data[0].lmp_date, dueDate: data[0].due_date } };
+    },
+
+    update: async (id: string, dueDate: string) => {
+        const { error } = await supabase
+            .from('pregnancies')
+            .update({ due_date: dueDate })
+            .eq('id', id);
+
+        if (error) return { error: error.message };
+        return { data: { message: 'Updated successfully' } };
+    }
+};
+
+// Daily Logs API
+export const logsApi = {
+    getAll: async () => {
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy found' };
+
+        const { data, error } = await supabase
+            .from('daily_logs')
+            .select('*')
+            .eq('pregnancy_id', pregnancy.id)
+            .order('log_date', { ascending: true });
+
+        if (error) return { error: error.message };
+        return { data: data as DailyLog[] };
+    },
+
+    getByDate: async (date: string) => {
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy found' };
+
+        const { data, error } = await supabase
+            .from('daily_logs')
+            .select('*')
+            .eq('pregnancy_id', pregnancy.id)
+            .eq('log_date', date)
+            .limit(1);
+
+        if (error || !data || data.length === 0) return { data: null }; // No log for this date is fine
+        return { data: data[0] as DailyLog };
+    },
+
+    create: async (logData: {
+        logDate: string;
+        symptoms?: string[];
+        mood?: string;
+        notes?: string;
+        weight?: number;
+        bloodPressure?: string;
+        bloodSugar?: number;
+    }) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy found' };
+
+        const { data: existingRows } = await supabase
+            .from('daily_logs')
+            .select('id')
+            .eq('pregnancy_id', pregnancy.id)
+            .eq('log_date', logData.logDate)
+            .limit(1);
+
+        const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
+
+        let error;
+        if (existing) {
+            ({ error } = await supabase
+                .from('daily_logs')
+                .update({
+                    symptoms: logData.symptoms,
+                    mood: logData.mood,
+                    notes: logData.notes,
+                    weight: logData.weight,
+                    blood_pressure: logData.bloodPressure,
+                    blood_sugar: logData.bloodSugar
+                })
+                .eq('id', existing.id));
+        } else {
+            ({ error } = await supabase
+                .from('daily_logs')
+                .insert({
+                    pregnancy_id: pregnancy.id,
+                    user_id: user.id,
+                    log_date: logData.logDate,
+                    symptoms: logData.symptoms || [],
+                    mood: logData.mood,
+                    notes: logData.notes,
+                    weight: logData.weight,
+                    blood_pressure: logData.bloodPressure,
+                    blood_sugar: logData.bloodSugar
+                }));
         }
 
-        const blob = await response.blob();
+        if (error) return { error: error.message };
+        return { data: { id: existing?.id || 'new', message: 'Log saved' } };
+    }
+};
+
+// Appointments API
+export const appointmentsApi = {
+    getAll: async () => {
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy found' };
+
+        const { data, error } = await supabase
+            .from('appointments')
+            .select('*')
+            .eq('pregnancy_id', pregnancy.id)
+            .order('datetime', { ascending: true });
+
+        if (error) return { error: error.message };
+        return { data: data as Appointment[] };
+    },
+
+    create: async (data: {
+        title: string;
+        datetime: string;
+        location?: string;
+        notes?: string;
+    }) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy found' };
+
+        const { data: result, error } = await supabase
+            .from('appointments')
+            .insert({
+                pregnancy_id: pregnancy.id,
+                user_id: user.id,
+                title: data.title,
+                datetime: data.datetime,
+                location: data.location,
+                notes: data.notes
+            })
+            .select();
+
+        if (error) return { error: error.message };
+        if (!result || result.length === 0) return { error: 'Failed to create appointment' };
+        return { data: { id: result[0].id, message: 'Appointment created' } };
+    },
+
+    update: async (id: string, updateData: Partial<Omit<Appointment, 'id' | 'pregnancy_id' | 'created_at'>>) => {
+        const { error } = await supabase
+            .from('appointments')
+            .update({
+                title: updateData.title,
+                datetime: updateData.datetime,
+                location: updateData.location,
+                notes: updateData.notes
+            })
+            .eq('id', id);
+
+        if (error) return { error: error.message };
+        return { data: { message: 'Updated' } };
+    },
+
+    delete: async (id: string) => {
+        const { error } = await supabase
+            .from('appointments')
+            .delete()
+            .eq('id', id);
+
+        if (error) return { error: error.message };
+        return { data: { message: 'Deleted' } };
+    }
+};
+
+// Education API (Client-side now)
+export const educationApi = {
+    getAll: async () => {
+        // Return local JSON data
+        return { data: educationData as unknown as EducationData };
+    },
+
+    getWeek: async (week: number) => {
+        const data = educationData as unknown as EducationData;
+        const weekContent = data.weeks.find(w => w.week === week)
+            || data.weeks.find(w => w.week <= week); // Fallback logic
+        return { data: weekContent };
+    },
+
+    getTrimester: async (trimester: number) => {
+        const data = educationData as unknown as EducationData;
+        const triContent = data.trimesters.find(t => t.trimester === trimester);
+        // We can filter weeks for this trimester if needed, but UI uses full data usually
+        return { data: { ...triContent, weeks: [] } as any };
+    }
+};
+
+// Export API (Client-side generation)
+export const exportApi = {
+    getPdfData: async () => {
+        const { data: user } = await authApi.me();
+        const { data: pregnancy } = await pregnancyApi.get();
+        if (!pregnancy) return { error: 'No pregnancy' };
+
+        const { data: logs } = await logsApi.getAll();
+        const { data: appointments } = await appointmentsApi.getAll();
+
+        // Return structure needed for client-side PDF generator
+        return {
+            data: {
+                user: { email: user?.email || '' },
+                pregnancy,
+                logs: logs || [],
+                appointments: appointments || [],
+                generatedAt: new Date().toISOString()
+            }
+        };
+    },
+
+    downloadCsv: async () => {
+        const { data: logs } = await logsApi.getAll();
+        if (!logs) return { error: 'No logs found' };
+
+        const headers = ['Date', 'Symptoms', 'Mood', 'Notes', 'Weight', 'Blood Pressure', 'Blood Sugar'];
+        const rows = logs.map((log) => [
+            log.log_date,
+            // Supabase returns array directly if JSON column
+            Array.isArray(log.symptoms) ? log.symptoms.join('; ') : '',
+            log.mood || '',
+            (log.notes || '').replace(/"/g, '""'),
+            log.weight || '',
+            log.blood_pressure || '',
+            log.blood_sugar || ''
+        ]);
+
+        const csv = [
+            headers.join(','),
+            ...rows.map(row => row.map((cell: any) => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'pregnancy_logs.csv';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
         return { data: true };
-    },
+    }
 };

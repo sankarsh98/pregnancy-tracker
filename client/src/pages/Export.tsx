@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import { exportApi } from '../api/client';
-import type { ExportData } from '../api/client';
+// Helper to infer type
+type ExportData = NonNullable<Awaited<ReturnType<typeof exportApi.getPdfData>>['data']>;
 import jsPDF from 'jspdf';
 
 export default function Export() {
