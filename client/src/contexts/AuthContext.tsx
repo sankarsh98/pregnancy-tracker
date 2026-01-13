@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { pregnancyApi } from '../api/client';
@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [pregnancy, setPregnancy] = useState<PregnancyData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const initialLoadDone = useRef(false);
 
     const fetchPregnancy = async (): Promise<PregnancyData | null> => {
         try {
@@ -45,10 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         let isMounted = true;
+        let hasInitialized = false;
 
         const initializeAuth = async () => {
+            if (hasInitialized) return;
+            hasInitialized = true;
+
             try {
-                // Get the current session
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
@@ -67,67 +69,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
-                    initialLoadDone.current = true;
                 }
             }
         };
 
+        // Start initialization
         initializeAuth();
 
-        // Subscribe to auth changes (but skip initial event if we already loaded)
+        // Failsafe: ensure loading stops after 5 seconds max
+        const timeout = setTimeout(() => {
+            if (isMounted && isLoading) {
+                console.warn('Auth loading timeout - forcing complete');
+                setIsLoading(false);
+            }
+        }, 5000);
+
+        // Subscribe to auth changes for login/logout during the session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state changed:', event);
 
-                // Skip INITIAL_SESSION since we already handled it above
-                if (event === 'INITIAL_SESSION') {
-                    return;
-                }
-
-                if (session?.user && isMounted) {
+                // Only handle actual sign-in/sign-out events, not initial session
+                if (event === 'SIGNED_IN' && session?.user && isMounted) {
                     setUser({ id: session.user.id, email: session.user.email || '' });
-                    // Only fetch pregnancy if this is a new sign-in
-                    if (event === 'SIGNED_IN') {
-                        setIsLoading(true);
-                        const pregnancyData = await fetchPregnancy();
-                        if (isMounted) {
-                            setPregnancy(pregnancyData);
-                            setIsLoading(false);
-                        }
-                    }
-                } else if (isMounted) {
+                    const pregnancyData = await fetchPregnancy();
+                    if (isMounted) setPregnancy(pregnancyData);
+                    setIsLoading(false);
+                } else if (event === 'SIGNED_OUT' && isMounted) {
                     setUser(null);
                     setPregnancy(null);
+                    setIsLoading(false);
                 }
             }
         );
 
         return () => {
             isMounted = false;
+            clearTimeout(timeout);
             subscription.unsubscribe();
         };
     }, []);
 
     const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            setIsLoading(true);
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) {
+                setIsLoading(false);
                 return { success: false, error: error.message };
             }
             return { success: true };
         } catch (err: any) {
+            setIsLoading(false);
             return { success: false, error: err?.message || 'Login failed' };
         }
     };
 
     const signup = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            setIsLoading(true);
             const { error } = await supabase.auth.signUp({ email, password });
             if (error) {
+                setIsLoading(false);
                 return { success: false, error: error.message };
             }
             return { success: true };
         } catch (err: any) {
+            setIsLoading(false);
             return { success: false, error: err?.message || 'Signup failed' };
         }
     };
