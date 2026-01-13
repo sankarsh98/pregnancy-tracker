@@ -351,9 +351,16 @@ export const educationApi = {
 
     getWeek: async (week: number) => {
         const data = educationData as unknown as EducationData;
-        const weekContent = data.weeks.find(w => w.week === week)
-            || data.weeks.find(w => w.week <= week); // Fallback logic
-        return { data: weekContent };
+        // Find exact match first
+        const exactMatch = data.weeks.find(w => w.week === week);
+        if (exactMatch) return { data: exactMatch };
+
+        // Fallback: find the closest week that is <= current week
+        const closestWeek = data.weeks
+            .filter(w => w.week <= week)
+            .sort((a, b) => b.week - a.week)[0]; // Sort descending, take first (highest)
+
+        return { data: closestWeek };
     },
 
     getTrimester: async (trimester: number) => {
