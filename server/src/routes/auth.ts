@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,7 +21,7 @@ router.post(
         body('email').isEmail().normalizeEmail(),
         body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
     ],
-    async (req, res: Response) => {
+    async (req: Request, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -58,7 +58,7 @@ router.post(
         body('email').isEmail().normalizeEmail(),
         body('password').notEmpty()
     ],
-    async (req, res: Response) => {
+    async (req: Request, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });

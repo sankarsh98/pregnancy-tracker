@@ -82,7 +82,7 @@ async function migrate() {
 
         for (const row of rows) {
             const rowData: any = {};
-            columns.forEach((col, i) => rowData[col] = row[i]);
+            columns.forEach((col: string, i: number) => rowData[col] = row[i]);
 
             console.log(`  Processing pregnancy (LMP: ${rowData.lmp_date})...`);
 
@@ -110,9 +110,9 @@ async function migrate() {
             if (logsResult.length > 0) {
                 const logCols = logsResult[0].columns;
                 const logRows = logsResult[0].values;
-                const logsToInsert = logRows.map(lRow => {
+                const logsToInsert = logRows.map((lRow: any[]) => {
                     const lData: any = {};
-                    logCols.forEach((lc, k) => lData[lc] = lRow[k]);
+                    logCols.forEach((lc: string, k: number) => lData[lc] = lRow[k]);
 
                     return {
                         pregnancy_id: newId,
@@ -139,9 +139,9 @@ async function migrate() {
             if (aptResult.length > 0) {
                 const aptCols = aptResult[0].columns;
                 const aptRows = aptResult[0].values;
-                const aptsToInsert = aptRows.map(aRow => {
+                const aptsToInsert = aptRows.map((aRow: any[]) => {
                     const aData: any = {};
-                    aptCols.forEach((ac, m) => aData[ac] = aRow[m]);
+                    aptCols.forEach((ac: string, m: number) => aData[ac] = aRow[m]);
 
                     return {
                         pregnancy_id: newId,
