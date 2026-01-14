@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import Layout from '../components/Layout';
-import { logsApi } from '../api/client';
-import type { DailyLog } from '../api/client';
+import { logsApi, trackersApi } from '../api/client';
+import type { DailyLog, TrackerConfig } from '../api/client';
+import { TrackerCounter } from '../components/TrackerCounter';
+import { TrackerManager } from '../components/TrackerManager';
 
 const SYMPTOM_OPTIONS = [
     'Nausea', 'Fatigue', 'Headache', 'Back pain', 'Cramps',
@@ -21,6 +23,7 @@ const MOOD_OPTIONS = [
 
 export default function DailyLogs() {
     const [logs, setLogs] = useState<DailyLog[]>([]);
+    const [trackers, setTrackers] = useState<TrackerConfig[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -30,11 +33,14 @@ export default function DailyLogs() {
     const [weight, setWeight] = useState('');
     const [bloodPressure, setBloodPressure] = useState('');
     const [bloodSugar, setBloodSugar] = useState('');
+    const [waterIntake, setWaterIntake] = useState(0);
+    const [customMetrics, setCustomMetrics] = useState<Record<string, number>>({});
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
         loadLogs();
+        loadTrackers();
     }, []);
 
     const loadLogs = async () => {
@@ -43,6 +49,13 @@ export default function DailyLogs() {
             setLogs(data);
         }
         setIsLoading(false);
+    };
+
+    const loadTrackers = async () => {
+        const { data } = await trackersApi.getAll();
+        if (data) {
+            setTrackers(data);
+        }
     };
 
     const toggleSymptom = (symptom: string) => {
@@ -66,6 +79,8 @@ export default function DailyLogs() {
             weight: weight ? parseFloat(weight) : undefined,
             bloodPressure: bloodPressure || undefined,
             bloodSugar: bloodSugar ? parseFloat(bloodSugar) : undefined,
+            waterIntake: waterIntake > 0 ? waterIntake : undefined,
+            customMetrics: Object.keys(customMetrics).length > 0 ? customMetrics : undefined,
         });
 
         if (error) {
@@ -87,6 +102,8 @@ export default function DailyLogs() {
         setWeight('');
         setBloodPressure('');
         setBloodSugar('');
+        setWaterIntake(0);
+        setCustomMetrics({});
         setSelectedDate(new Date().toISOString().split('T')[0]);
     };
 
@@ -100,8 +117,17 @@ export default function DailyLogs() {
             setWeight(data.weight?.toString() || '');
             setBloodPressure(data.blood_pressure || '');
             setBloodSugar(data.blood_sugar?.toString() || '');
+            setWaterIntake(data.water_intake || 0);
+            setCustomMetrics(data.custom_metrics || {});
             setShowForm(true);
         }
+    };
+
+    const handleCustomMetricChange = (name: string, value: number) => {
+        setCustomMetrics(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     return (
@@ -158,6 +184,40 @@ export default function DailyLogs() {
                                     required
                                 />
                             </div>
+
+                            {/* Hydration & Trackers Section */}
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-700 mb-3">Trackers</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <TrackerCounter
+                                        label="Water Intake"
+                                        emoji="💧"
+                                        value={waterIntake}
+                                        unit="glasses"
+                                        onChange={setWaterIntake}
+                                    />
+                                    
+                                    {trackers.map(tracker => (
+                                        <TrackerCounter
+                                            key={tracker.id}
+                                            label={tracker.name}
+                                            emoji={tracker.emoji}
+                                            value={customMetrics[tracker.name] || 0}
+                                            onChange={(val) => handleCustomMetricChange(tracker.name, val)}
+                                        />
+                                    ))}
+                                </div>
+                                
+                                <TrackerManager 
+                                    trackers={trackers} 
+                                    onTrackerAdded={loadTrackers} 
+                                    onTrackerDeleted={(id) => {
+                                        setTrackers(prev => prev.filter(t => t.id !== id));
+                                    }}
+                                />
+                            </div>
+
+                            <hr className="border-gray-100" />
 
                             {/* Mood Selection */}
                             <div>

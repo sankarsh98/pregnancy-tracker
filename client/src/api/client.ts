@@ -32,6 +32,17 @@ export interface DailyLog {
     weight: number | null;
     blood_pressure: string | null;
     blood_sugar: number | null;
+    water_intake: number;
+    custom_metrics: Record<string, number>;
+    created_at: string;
+}
+
+export interface TrackerConfig {
+    id: string;
+    user_id: string;
+    name: string;
+    emoji: string;
+    daily_goal: number | null;
     created_at: string;
 }
 
@@ -182,6 +193,52 @@ export const pregnancyApi = {
     }
 };
 
+// Trackers API
+export const trackersApi = {
+    getAll: async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data, error } = await supabase
+            .from('tracker_configs')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true });
+
+        if (error) return { error: error.message };
+        return { data: data as TrackerConfig[] };
+    },
+
+    create: async (name: string, emoji: string, dailyGoal?: number) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data, error } = await supabase
+            .from('tracker_configs')
+            .insert({
+                user_id: user.id,
+                name,
+                emoji,
+                daily_goal: dailyGoal
+            })
+            .select()
+            .single();
+
+        if (error) return { error: error.message };
+        return { data: data as TrackerConfig };
+    },
+
+    delete: async (id: string) => {
+        const { error } = await supabase
+            .from('tracker_configs')
+            .delete()
+            .eq('id', id);
+
+        if (error) return { error: error.message };
+        return { data: true };
+    }
+};
+
 // Daily Logs API
 export const logsApi = {
     getAll: async () => {
@@ -221,6 +278,8 @@ export const logsApi = {
         weight?: number;
         bloodPressure?: string;
         bloodSugar?: number;
+        waterIntake?: number;
+        customMetrics?: Record<string, number>;
     }) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { error: 'Not authenticated' };
@@ -238,17 +297,24 @@ export const logsApi = {
         const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
         let error;
+        const payload: any = {
+            symptoms: logData.symptoms,
+            mood: logData.mood,
+            notes: logData.notes,
+            weight: logData.weight,
+            blood_pressure: logData.bloodPressure,
+            blood_sugar: logData.bloodSugar,
+            water_intake: logData.waterIntake,
+            custom_metrics: logData.customMetrics
+        };
+
+        // Remove undefined keys
+        Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+
         if (existing) {
             ({ error } = await supabase
                 .from('daily_logs')
-                .update({
-                    symptoms: logData.symptoms,
-                    mood: logData.mood,
-                    notes: logData.notes,
-                    weight: logData.weight,
-                    blood_pressure: logData.bloodPressure,
-                    blood_sugar: logData.bloodSugar
-                })
+                .update(payload)
                 .eq('id', existing.id));
         } else {
             ({ error } = await supabase
@@ -257,12 +323,10 @@ export const logsApi = {
                     pregnancy_id: pregnancy.id,
                     user_id: user.id,
                     log_date: logData.logDate,
-                    symptoms: logData.symptoms || [],
-                    mood: logData.mood,
-                    notes: logData.notes,
-                    weight: logData.weight,
-                    blood_pressure: logData.bloodPressure,
-                    blood_sugar: logData.bloodSugar
+                    ...payload,
+                    // Ensure arrays/objects are initialized if creating new
+                    symptoms: payload.symptoms || [],
+                    custom_metrics: payload.custom_metrics || {}
                 }));
         }
 

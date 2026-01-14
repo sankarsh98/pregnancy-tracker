@@ -80,9 +80,37 @@ export async function initDatabase(): Promise<Database> {
     );
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tracker_configs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      emoji TEXT NOT NULL,
+      daily_goal INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Migrations for existing tables
+  try {
+    const columns = db.exec("PRAGMA table_info(daily_logs)")[0].values.map(c => c[1]);
+    
+    if (!columns.includes('water_intake')) {
+      db.run("ALTER TABLE daily_logs ADD COLUMN water_intake INTEGER DEFAULT 0");
+    }
+    
+    if (!columns.includes('custom_metrics')) {
+      db.run("ALTER TABLE daily_logs ADD COLUMN custom_metrics TEXT DEFAULT '{}'");
+    }
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+
   db.run(`CREATE INDEX IF NOT EXISTS idx_pregnancies_user ON pregnancies(user_id);`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_logs_pregnancy ON daily_logs(pregnancy_id);`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_appointments_pregnancy ON appointments(pregnancy_id);`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_trackers_user ON tracker_configs(user_id);`);
 
   // Save database
   saveDatabase();

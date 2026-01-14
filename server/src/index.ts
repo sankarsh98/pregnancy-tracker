@@ -10,6 +10,7 @@ import logsRoutes from './routes/logs';
 import appointmentsRoutes from './routes/appointments';
 import educationRoutes from './routes/education';
 import exportRoutes from './routes/export';
+import trackersRoutes from './routes/trackers';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +39,7 @@ app.use('/api/logs', logsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/education', educationRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/trackers', trackersRoutes);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

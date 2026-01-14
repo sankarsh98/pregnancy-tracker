@@ -20,6 +20,8 @@ interface DailyLog {
     weight: number;
     blood_pressure: string;
     blood_sugar: number;
+    water_intake: number;
+    custom_metrics: string;
     created_at: string;
     updated_at: string;
 }
@@ -46,10 +48,11 @@ router.get('/', authMiddleware, (req: AuthRequest, res: Response) => {
         [pregnancyId]
     );
 
-    // Parse symptoms JSON
+    // Parse symptoms and custom_metrics JSON
     const parsedLogs = logs.map((log) => ({
         ...log,
-        symptoms: JSON.parse(log.symptoms || '[]')
+        symptoms: JSON.parse(log.symptoms || '[]'),
+        custom_metrics: JSON.parse(log.custom_metrics || '{}')
     }));
 
     res.json(parsedLogs);
@@ -75,7 +78,8 @@ router.get('/:date', authMiddleware, (req: AuthRequest, res: Response) => {
 
     res.json({
         ...log,
-        symptoms: JSON.parse(log.symptoms || '[]')
+        symptoms: JSON.parse(log.symptoms || '[]'),
+        custom_metrics: JSON.parse(log.custom_metrics || '{}')
     });
 });
 
@@ -90,7 +94,9 @@ router.post(
         body('notes').optional().isString(),
         body('weight').optional().isNumeric(),
         body('bloodPressure').optional().isString(),
-        body('bloodSugar').optional().isNumeric()
+        body('bloodSugar').optional().isNumeric(),
+        body('waterIntake').optional().isInt(),
+        body('customMetrics').optional().isObject()
     ],
     (req: AuthRequest, res: Response) => {
         const errors = validationResult(req);
@@ -104,7 +110,7 @@ router.post(
             return res.status(404).json({ error: 'No active pregnancy found' });
         }
 
-        const { logDate, symptoms, mood, notes, weight, bloodPressure, bloodSugar } = req.body;
+        const { logDate, symptoms, mood, notes, weight, bloodPressure, bloodSugar, waterIntake, customMetrics } = req.body;
 
         // Check if log exists for this date
         const existingLog = get<{ id: string }>(
@@ -113,6 +119,7 @@ router.post(
         );
 
         const symptomsJson = JSON.stringify(symptoms || []);
+        const customMetricsJson = JSON.stringify(customMetrics || {});
 
         if (existingLog) {
             // Update existing log
@@ -124,9 +131,21 @@ router.post(
           weight = ?,
           blood_pressure = ?,
           blood_sugar = ?,
+          water_intake = ?,
+          custom_metrics = ?,
           updated_at = datetime('now')
         WHERE id = ?`,
-                [symptomsJson, mood || null, notes || null, weight || null, bloodPressure || null, bloodSugar || null, existingLog.id]
+                [
+                    symptomsJson, 
+                    mood || null, 
+                    notes || null, 
+                    weight || null, 
+                    bloodPressure || null, 
+                    bloodSugar || null, 
+                    waterIntake || 0,
+                    customMetricsJson,
+                    existingLog.id
+                ]
             );
 
             res.json({ id: existingLog.id, message: 'Log updated' });
@@ -134,9 +153,21 @@ router.post(
             // Create new log
             const logId = uuidv4();
             run(
-                `INSERT INTO daily_logs (id, pregnancy_id, log_date, symptoms, mood, notes, weight, blood_pressure, blood_sugar)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [logId, pregnancyId, logDate, symptomsJson, mood || null, notes || null, weight || null, bloodPressure || null, bloodSugar || null]
+                `INSERT INTO daily_logs (id, pregnancy_id, log_date, symptoms, mood, notes, weight, blood_pressure, blood_sugar, water_intake, custom_metrics)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    logId, 
+                    pregnancyId, 
+                    logDate, 
+                    symptomsJson, 
+                    mood || null, 
+                    notes || null, 
+                    weight || null, 
+                    bloodPressure || null, 
+                    bloodSugar || null,
+                    waterIntake || 0,
+                    customMetricsJson
+                ]
             );
 
             res.status(201).json({ id: logId, message: 'Log created' });
