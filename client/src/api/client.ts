@@ -2,7 +2,9 @@ import { supabase } from '../lib/supabase';
 import {
     calculatePregnancyWeek,
     calculateDueDate,
-    calculateDaysRemaining
+    calculateDaysRemaining,
+    getTrimester,
+    getTrimesterLabel
 } from '../utils/pregnancy';
 import educationData from '../data/education.json';
 
