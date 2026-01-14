@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrackerConfig, trackersApi } from '../api/client';
+import { type TrackerConfig, trackersApi } from '../api/client';
 
 interface TrackerManagerProps {
     trackers: TrackerConfig[];
