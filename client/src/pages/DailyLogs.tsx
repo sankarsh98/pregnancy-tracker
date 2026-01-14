@@ -5,6 +5,7 @@ import { logsApi, trackersApi } from '../api/client';
 import type { DailyLog, TrackerConfig } from '../api/client';
 import { TrackerCounter } from '../components/TrackerCounter';
 import { TrackerManager } from '../components/TrackerManager';
+import { MedicineCheckbox } from '../components/MedicineCheckbox';
 
 const SYMPTOM_OPTIONS = [
     'Nausea', 'Fatigue', 'Headache', 'Back pain', 'Cramps',
@@ -34,7 +35,7 @@ export default function DailyLogs() {
     const [bloodPressure, setBloodPressure] = useState('');
     const [bloodSugar, setBloodSugar] = useState('');
     const [waterIntake, setWaterIntake] = useState(0);
-    const [customMetrics, setCustomMetrics] = useState<Record<string, number>>({});
+    const [customMetrics, setCustomMetrics] = useState<Record<string, number | boolean>>({});
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState('');
 
@@ -123,12 +124,16 @@ export default function DailyLogs() {
         }
     };
 
-    const handleCustomMetricChange = (name: string, value: number) => {
+    const handleCustomMetricChange = (name: string, value: number | boolean) => {
         setCustomMetrics(prev => ({
             ...prev,
             [name]: value
         }));
     };
+
+    // Group trackers
+    const counterTrackers = trackers.filter(t => t.type !== 'checklist');
+    const checklistTrackers = trackers.filter(t => t.type === 'checklist');
 
     return (
         <Layout>
@@ -187,8 +192,8 @@ export default function DailyLogs() {
 
                             {/* Hydration & Trackers Section */}
                             <div>
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">Trackers</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <h3 className="text-sm font-medium text-gray-700 mb-3">Trackers & Goals</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                     <TrackerCounter
                                         label="Water Intake"
                                         emoji="💧"
@@ -197,16 +202,34 @@ export default function DailyLogs() {
                                         onChange={setWaterIntake}
                                     />
                                     
-                                    {trackers.map(tracker => (
+                                    {counterTrackers.map(tracker => (
                                         <TrackerCounter
                                             key={tracker.id}
                                             label={tracker.name}
                                             emoji={tracker.emoji}
-                                            value={customMetrics[tracker.name] || 0}
+                                            value={(customMetrics[tracker.name] as number) || 0}
+                                            max={tracker.daily_goal ? tracker.daily_goal * 2 : 100}
                                             onChange={(val) => handleCustomMetricChange(tracker.name, val)}
                                         />
                                     ))}
                                 </div>
+
+                                {checklistTrackers.length > 0 && (
+                                    <>
+                                        <h3 className="text-sm font-medium text-gray-700 mb-3 mt-6">Medicines & Checklist</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {checklistTrackers.map(tracker => (
+                                                <MedicineCheckbox
+                                                    key={tracker.id}
+                                                    label={tracker.name}
+                                                    emoji={tracker.emoji}
+                                                    checked={(customMetrics[tracker.name] as boolean) || false}
+                                                    onChange={(val) => handleCustomMetricChange(tracker.name, val)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                                 
                                 <TrackerManager 
                                     trackers={trackers} 

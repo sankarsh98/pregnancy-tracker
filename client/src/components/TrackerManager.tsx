@@ -12,6 +12,7 @@ export const TrackerManager: React.FC<TrackerManagerProps> = ({ trackers, onTrac
     const [name, setName] = useState('');
     const [emoji, setEmoji] = useState('🍎');
     const [dailyGoal, setDailyGoal] = useState<string>('');
+    const [type, setType] = useState<'counter' | 'checklist'>('counter');
     const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -23,13 +24,14 @@ export const TrackerManager: React.FC<TrackerManagerProps> = ({ trackers, onTrac
             return;
         }
 
-        const res = await trackersApi.create(name, emoji, dailyGoal ? parseInt(dailyGoal) : undefined);
+        const res = await trackersApi.create(name, emoji, dailyGoal ? parseInt(dailyGoal) : undefined, type);
         if (res.error) {
             setError(res.error);
         } else {
             setIsAdding(false);
             setName('');
             setDailyGoal('');
+            setType('counter');
             onTrackerAdded();
         }
     };
@@ -57,7 +59,18 @@ export const TrackerManager: React.FC<TrackerManagerProps> = ({ trackers, onTrac
 
             {isAdding && (
                 <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value as 'counter' | 'checklist')}
+                                className="w-full px-3 py-2 border rounded-md focus:ring-pink-500 focus:border-pink-500 bg-white"
+                            >
+                                <option value="counter">Counter (1, 2, 3...)</option>
+                                <option value="checklist">Checklist (Done/Not Done)</option>
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Emoji</label>
                             <input
@@ -78,16 +91,18 @@ export const TrackerManager: React.FC<TrackerManagerProps> = ({ trackers, onTrac
                                 placeholder="Fruits"
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Daily Goal (Optional)</label>
-                            <input
-                                type="number"
-                                value={dailyGoal}
-                                onChange={(e) => setDailyGoal(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-md focus:ring-pink-500 focus:border-pink-500"
-                                placeholder="5"
-                            />
-                        </div>
+                        {type === 'counter' && (
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Daily Goal</label>
+                                <input
+                                    type="number"
+                                    value={dailyGoal}
+                                    onChange={(e) => setDailyGoal(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md focus:ring-pink-500 focus:border-pink-500"
+                                    placeholder="5"
+                                />
+                            </div>
+                        )}
                     </div>
                     {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
                     <button
@@ -110,9 +125,12 @@ export const TrackerManager: React.FC<TrackerManagerProps> = ({ trackers, onTrac
                             <span className="text-2xl">{tracker.emoji}</span>
                             <div>
                                 <p className="font-medium text-gray-800">{tracker.name}</p>
-                                {tracker.daily_goal && (
-                                    <p className="text-xs text-gray-500">Goal: {tracker.daily_goal}</p>
-                                )}
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className={`px-1.5 py-0.5 rounded ${tracker.type === 'checklist' ? 'bg-mint-100 text-mint-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        {tracker.type === 'checklist' ? 'Checklist' : 'Counter'}
+                                    </span>
+                                    {tracker.daily_goal && <span>Goal: {tracker.daily_goal}</span>}
+                                </div>
                             </div>
                         </div>
                         <button
