@@ -4,7 +4,7 @@
             "week": 4,
             "title": "Early Development",
             "trimester": 1,
-            "babySize": "Poppy seed",
+            "babySize": "Poppy seed (Khus khus)",
             "development": "The fertilized egg implants in the uterine wall. The amniotic sac and placenta begin to form.",
             "symptoms": [
                 "Missed period",
@@ -12,15 +12,16 @@
                 "Light cramping"
             ],
             "tips": [
-                "Start taking prenatal vitamins with folic acid",
-                "Schedule your first prenatal appointment"
+                "Start taking prenatal vitamins with folic acid (Folvite)",
+                "Schedule your first prenatal appointment with a Gynecologist",
+                "In India, traditional elders might advise against travel during this time"
             ]
         },
         {
             "week": 5,
             "title": "Heart Formation",
             "trimester": 1,
-            "babySize": "Sesame seed",
+            "babySize": "Sesame seed (Til)",
             "development": "The neural tube develops and the heart begins to beat. Early brain and spinal cord are forming.",
             "symptoms": [
                 "Morning sickness may begin",
@@ -28,75 +29,76 @@
                 "Frequent urination"
             ],
             "tips": [
-                "Stay hydrated",
-                "Eat small, frequent meals to manage nausea"
+                "Stay hydrated - Coconut water / Nimbu pani are excellent options",
+                "Eat small, frequent meals (try roasted chana or murmura) to manage nausea"
             ]
         },
         {
             "week": 6,
             "title": "Facial Features Begin",
             "trimester": 1,
-            "babySize": "Lentil",
+            "babySize": "Lentil (Masoor dal)",
             "development": "Facial features like eyes and ears start forming. Arm and leg buds appear.",
             "symptoms": [
                 "Increased fatigue",
                 "Mood swings",
-                "Food aversions"
+                "Food aversions (often to strong spices/tadka smells)"
             ],
             "tips": [
                 "Get plenty of rest",
-                "Avoid raw or undercooked foods"
+                "Avoid raw or undercooked foods",
+                "Ginger tea (Adrak chai) can help soothe morning sickness"
             ]
         },
         {
             "week": 8,
             "title": "Moving Limbs",
             "trimester": 1,
-            "babySize": "Raspberry",
+            "babySize": "Raspberry (Ber)",
             "development": "Fingers and toes are forming. Baby starts making small movements.",
             "symptoms": [
                 "Morning sickness peaks",
                 "Heightened sense of smell"
             ],
             "tips": [
-                "Wear loose, comfortable clothing",
-                "Consider ginger for nausea relief"
+                "Wear loose, comfortable cotton clothing (Kurtas are great)",
+                "Consider lemon/ginger pickle (in moderation) for nausea relief"
             ]
         },
         {
             "week": 10,
             "title": "Vital Organs Develop",
             "trimester": 1,
-            "babySize": "Prune",
+            "babySize": "Prune (Jamun)",
             "development": "All vital organs have begun to form. Bones start to harden.",
             "symptoms": [
                 "Visible veins",
                 "Increased vaginal discharge"
             ],
             "tips": [
-                "Discuss genetic testing options with your doctor"
+                "Discuss genetic testing options (Double marker test) with your doctor"
             ]
         },
         {
             "week": 12,
             "title": "End of First Trimester",
             "trimester": 1,
-            "babySize": "Lime",
+            "babySize": "Lime (Nimbu)",
             "development": "Reflexes develop. Baby can open and close fingers. Nail beds form.",
             "symptoms": [
                 "Morning sickness may ease",
                 "More energy returning"
             ],
             "tips": [
-                "Consider announcing your pregnancy",
-                "Start researching childbirth classes"
+                "Consider announcing your pregnancy to family",
+                "Nuchal Translucency (NT) scan is usually done between 11-13 weeks"
             ]
         },
         {
             "week": 14,
             "title": "Second Trimester Begins",
             "trimester": 2,
-            "babySize": "Lemon",
+            "babySize": "Lemon (Large Nimbu)",
             "development": "Baby can make facial expressions. Hair follicles develop.",
             "symptoms": [
                 "Increased appetite",
@@ -104,7 +106,7 @@
             ],
             "tips": [
                 "Enjoy the 'honeymoon phase' of pregnancy",
-                "Stay active with gentle exercise"
+                "Include iron-rich foods like spinach (palak), jaggery (gud), and dates"
             ]
         },
         {
@@ -112,13 +114,13 @@
             "title": "Gender May Be Visible",
             "trimester": 2,
             "babySize": "Avocado",
-            "development": "Muscles strengthen. Baby can grasp with hands. Gender may be visible on ultrasound.",
+            "development": "Muscles strengthen. Baby can grasp with hands. Gender is NOT revealed in India (PNDT Act prohibits sex determination).",
             "symptoms": [
                 "Glow may appear",
                 "Nasal congestion"
             ],
             "tips": [
-                "Consider a gender reveal if you're finding out",
+                "Strictly remember: Sex determination is illegal in India",
                 "Sleep on your side"
             ]
         },
@@ -126,14 +128,14 @@
             "week": 18,
             "title": "Hearing Develops",
             "trimester": 2,
-            "babySize": "Bell pepper",
+            "babySize": "Bell pepper (Shimla Mirch)",
             "development": "Baby can hear sounds. Vernix (protective coating) covers skin.",
             "symptoms": [
                 "May feel first movements (quickening)",
                 "Leg cramps"
             ],
             "tips": [
-                "Play music or talk to your baby",
+                "Play music or talk to your baby (Garbh Sanskar)",
                 "Stretch before bed to prevent cramps"
             ]
         },
@@ -141,23 +143,24 @@
             "week": 20,
             "title": "Halfway Point",
             "trimester": 2,
-            "babySize": "Banana",
+            "babySize": "Banana (Kela)",
             "development": "Eyebrows and eyelids form. Baby is very active.",
             "symptoms": [
                 "Clear fetal movements",
                 "Backaches",
-                "Heartburn"
+                "Heartburn (Acidity)"
             ],
             "tips": [
-                "Anatomy scan typically scheduled around now",
-                "Practice good posture"
+                "Anatomy scan (Level 2 Ultrasound) is mandatory now",
+                "Practice good posture",
+                "Tetanus Toxoid (TT) injections are standard in India - check with doctor"
             ]
         },
         {
             "week": 24,
             "title": "Viable Outside Womb",
             "trimester": 2,
-            "babySize": "Corn on the cob",
+            "babySize": "Corn on the cob (Bhutta)",
             "development": "Lungs develop surfactant. Baby reaches viability milestone.",
             "symptoms": [
                 "Braxton Hicks contractions may begin",
@@ -165,45 +168,45 @@
             ],
             "tips": [
                 "Monitor kicks daily",
-                "Use moisturizer for stretch marks"
+                "Use coconut oil or moisturizer for stretch marks"
             ]
         },
         {
             "week": 28,
             "title": "Third Trimester Begins",
             "trimester": 3,
-            "babySize": "Eggplant",
+            "babySize": "Eggplant (Baingan)",
             "development": "Baby can blink eyes. Brain development accelerates. May dream during REM sleep.",
             "symptoms": [
                 "Shortness of breath",
                 "Trouble sleeping",
-                "Swelling"
+                "Swelling (Edema) in feet"
             ],
             "tips": [
-                "Prenatal visits become more frequent",
-                "Start thinking about birth preferences"
+                "Prenatal visits become more frequent (every 2 weeks)",
+                "Traditional 'Godh Bharai' (Baby Shower) is often planned around the 7th month"
             ]
         },
         {
             "week": 32,
             "title": "Preparing for Birth",
             "trimester": 3,
-            "babySize": "Jicama",
+            "babySize": "Jicama (Large Coconut)",
             "development": "Baby practices breathing. Fat accumulates for temperature regulation.",
             "symptoms": [
                 "Increased fatigue",
                 "Frequent urination returns"
             ],
             "tips": [
-                "Pack your hospital bag",
-                "Finalize birth plan"
+                "Pack your hospital bag (include loose gowns/maxis)",
+                "Ensure your Mother and Child Protection (MCP) card is up to date"
             ]
         },
         {
             "week": 36,
             "title": "Almost Full Term",
             "trimester": 3,
-            "babySize": "Romaine lettuce",
+            "babySize": "Romaine lettuce (Papaya)",
             "development": "Baby may drop into pelvis. Lungs nearly mature.",
             "symptoms": [
                 "Pelvic pressure",
@@ -211,14 +214,14 @@
             ],
             "tips": [
                 "Weekly prenatal visits begin",
-                "Install car seat"
+                "Arrange transport for the hospital beforehand"
             ]
         },
         {
             "week": 38,
             "title": "Full Term",
             "trimester": 3,
-            "babySize": "Leek",
+            "babySize": "Leek (Lauki/Bottle Gourd)",
             "development": "Baby is considered full term. Organs fully developed.",
             "symptoms": [
                 "Nesting instinct",
@@ -227,15 +230,15 @@
             ],
             "tips": [
                 "Rest as much as possible",
-                "Know the signs of labor"
+                "Discuss post-delivery care (Jaapa/Confinement) plans with elders"
             ]
         },
         {
             "week": 40,
             "title": "Due Date",
             "trimester": 3,
-            "babySize": "Watermelon",
-            "development": "Baby is ready for birth. Average newborn is 7-8 pounds.",
+            "babySize": "Watermelon (Tarbooz)",
+            "development": "Baby is ready for birth. Average newborn is 2.5-3.5 kg.",
             "symptoms": [
                 "May feel pressure or cramping",
                 "Mucus plug may release"
@@ -251,39 +254,39 @@
             "trimester": 1,
             "title": "First Trimester",
             "weeks": "1-13",
-            "overview": "The first trimester is a time of rapid development. Your baby's major organs and systems begin to form. Many people experience morning sickness, fatigue, and emotional changes as hormones shift.",
+            "overview": "The first trimester is a time of rapid development. Your baby's major organs and systems begin to form. Many Indian women rely on home cooked meals and family support during this time.",
             "keyMilestones": [
                 "Positive pregnancy test",
                 "First heartbeat visible on ultrasound",
                 "All major organs begin forming"
             ],
             "selfCare": [
-                "Take prenatal vitamins",
+                "Take prenatal vitamins (Folic Acid)",
                 "Avoid alcohol and smoking",
-                "Get adequate rest"
+                "Eat home-cooked, hygienic food"
             ]
         },
         {
             "trimester": 2,
             "title": "Second Trimester",
             "weeks": "14-27",
-            "overview": "Often called the 'honeymoon phase,' many people feel their best during the second trimester. Morning sickness typically subsides, and you may start to feel baby movements.",
+            "overview": "Often called the 'honeymoon phase,' many people feel their best during the second trimester. In India, this is often when the news is shared with extended family.",
             "keyMilestones": [
                 "Anatomy scan (around week 20)",
                 "Feel first kicks",
-                "Baby's gender may be visible"
+                "Godh Bharai planning (7th month)"
             ],
             "selfCare": [
-                "Stay active with prenatal exercise",
-                "Eat balanced meals",
-                "Connect with your baby"
+                "Stay active with prenatal yoga (if doctor approves)",
+                "Eat balanced meals with dal, green veggies, and dairy",
+                "Connect with your baby (Garbh Sanskar)"
             ]
         },
         {
             "trimester": 3,
             "title": "Third Trimester",
             "weeks": "28-40",
-            "overview": "The final stretch! Your baby gains weight and prepares for birth. You may experience more discomfort as baby grows, but the excitement of meeting your little one builds.",
+            "overview": "The final stretch! Your baby gains weight. You may move to your maternal home for delivery (if following tradition).",
             "keyMilestones": [
                 "Baby reaches viability",
                 "Lung maturity develops",
@@ -292,7 +295,7 @@
             "selfCare": [
                 "Rest frequently",
                 "Prepare for delivery",
-                "Pack hospital bag"
+                "Pack hospital bag with baby essentials"
             ]
         }
     ]
