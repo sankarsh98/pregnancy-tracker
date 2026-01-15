@@ -8,15 +8,14 @@
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.6;
   font-weight: 400;
-  color-scheme: light;
-  color: #374151;
-  background-color: #faf8ff;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  @apply bg-lavender-50 text-gray-700 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200;
 }
 
 /* Custom scrollbar */
@@ -26,28 +25,27 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f3f0ff;
+  @apply bg-lavender-100 dark:bg-gray-800;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d7cdff;
-  border-radius: 4px;
+  @apply bg-lavender-300 dark:bg-gray-600 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #bba6ff;
+  @apply bg-lavender-400 dark:bg-gray-500;
 }
 
 /* Form input styling */
 input,
 select,
 textarea {
-  @apply rounded-xl border-2 border-lavender-200 px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-lavender-400 focus:border-transparent transition-all duration-200 bg-white;
+  @apply rounded-xl border-2 border-lavender-200 px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-lavender-400 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white;
 }
 
 input::placeholder,
 textarea::placeholder {
-  @apply text-gray-400;
+  @apply text-gray-400 dark:text-gray-500;
 }
 
 /* Button base styles */
@@ -69,12 +67,12 @@ textarea::placeholder {
 
 /* Card styling */
 .card {
-  @apply bg-white rounded-2xl p-6 shadow-lg shadow-lavender-100/50 border border-lavender-100;
+  @apply bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg shadow-lavender-100/50 dark:shadow-none border border-lavender-100 dark:border-gray-800 transition-colors duration-200;
 }
 
 /* Gradient background */
 .gradient-bg {
-  background: linear-gradient(135deg, #faf8ff 0%, #f3f0ff 50%, #ffeaef 100%);
+  @apply bg-gradient-to-br from-lavender-50 via-lavender-100 to-blush-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors duration-200;
 }
 
 /* Animation utilities */
